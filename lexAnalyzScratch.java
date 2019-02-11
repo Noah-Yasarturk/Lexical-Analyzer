@@ -101,7 +101,7 @@ public class lexAnalyzScratch {
 		System.out.println("LEXEMES:                      TOKENs:"); 
 
 		String term = new String();
-		String lx, tk;
+		String lx, tk = "tba";
 		StringTokenizer st = new StringTokenizer(javaLine);
 		//iterate through line
 		while(st.hasMoreTokens() == true){
@@ -112,10 +112,20 @@ public class lexAnalyzScratch {
 			lxs = termParse(term);
 			
 			for (int i =0; i<lxs.size(); i++){
+				if (lxs.size()==0){
+					lx = "space";
+					tk = "space";
+				}
+				lx = lxs.get(i);
+				//Check if lexeme is an operator; if so, assign tk to operator; Operator classifier tba
+				if (opCheck(lx)[0] != -1){
+					tk = "Operator";
+				}
 				//print result with help from:https://stackoverflow.com/questions/5249566/adding-whitespace-in-java
-				String termf = String.format("%-30s", term); 
-				tk = "tba"; //to be found using classifier method
-				System.out.println(termf+tk);
+				String lxFormat = String.format("%-30s", lx); 
+				System.out.println(lxFormat+tk);
+				//Reset token value
+				tk = "tba";
 			}
 		}
 	}
@@ -124,6 +134,7 @@ public class lexAnalyzScratch {
 		/* This method takes a "token" from our StringTokenizer and identifies any tokens it has missed.
 		 * Total tokens are then returned as a String array.
 		 */
+		term = term.trim();
 		
 		ArrayList<String> result = new ArrayList<String>();
 		ArrayList<String> opTemp = new ArrayList<String>(); //store separation following Operator find
@@ -138,6 +149,7 @@ public class lexAnalyzScratch {
 		
 		while (fullDone == false){
 			//Determine if term is 1 character
+			
 			if(term.length() == 1){
 				result.add(term);
 				opDone = true;
@@ -150,17 +162,24 @@ public class lexAnalyzScratch {
 				int endOps = (opCheck(term)[0] + opCheck(term)[1] - 1); //stores index of last char of operator
 				//Check if no operators exist
 				if(begOps == -1){
-					result.add(term);
+					opTemp.add(term);
 					opDone = true;
 				}
 				//Check if operator is found at start of term
 				else if(begOps == 0){
+					//if term is only an operator
+					if(opCheck(term)[1] == term.length()){
+						opTemp.add(term);
+						opDone = true;
+					}else{
+					
 					//Add match operator to temp
 					String[] opSplit1 = term.split(Character.toString(term.charAt(endOps+1)));
 					opTemp.add(opSplit1[0]);
 					//Reprocess rest
 					String[] opSplit2 = term.split(Character.toString(term.charAt(endOps)));
 					term = (opSplit2[1]);
+					}
 				}
 				//Check if operator is found later in term
 				else if((begOps !=0) && (begOps != -1)){
@@ -183,9 +202,7 @@ public class lexAnalyzScratch {
 		}
 		
 		
-		
-		result = opTemp;
-		
+		result.addAll(opTemp);		
 		return(result);
 	}
 	
@@ -196,10 +213,13 @@ public class lexAnalyzScratch {
 		 * The second index indicates the length of the matched String.
 		 */
 		int[] ind = {-1, -1};
-		String[] operators = {"=", ">", "<", "!", "~", "?", ":",
-				"==", "<=", ">=", "!=", "&&", "||", "++", "--",
-				"+", "-", "*", "/", "&", "|", "^", "%", "<<", ">>", ">>>",
-				"+=", "-=", "*=", "/=", "&=", "|=", "^=", "%=", "<<=", ">>=", ">>>="
+		//need to check longer operators first so that first match is longest operator possible
+		String[] operators = {"==", "<=", ">=", "!=", "&&", "||", "++", "--",
+				"<<=", ">>=",  ">>>",">>>=",
+				"<<", ">>",
+				"+=", "-=", "*=", "/=", "&=", "|=", "^=", "%=", 
+				"=", ">", "<", "!", "~", "?", ":",
+				"+", "-", "*", "/", "&", "|", "^", "%"
 				};
 		for (int i = 0; i<operators.length; i++){
 			ind[0] = lex.indexOf(operators[i]);
